@@ -83,7 +83,7 @@ Resumiendo un poco, su puede ver que sea con heurística o sin, usando grafo sie
 
 Se implementaron los siguientes algoritmos en la carpeta `algorithms/`, siguiendo los requisitos de la práctica (sucesores en orden lexicográfico, seguimiento de nodos expandidos, etc.).
 
-* **Tree IDS (Ej. 2.1):** Implementado en `algorithms/ids.py`.
+**Tree IDS (Ej. 2.1):** Implementado en `algorithms/ids.py`.
 
 Para la implementación de TreeIDS (Iterative Deepening Search), el algoritmo se basa en un bucle principal (search) que llama repetidamente a una función de Búsqueda en Profundidad Limitada (DLS), llamada depth_limited_search. Este bucle incrementa el límite de profundidad (limit) en cada iteración, comenzando desde 0, hasta que la búsqueda de DLS devuelve una solución.
 
@@ -91,7 +91,7 @@ El núcleo de la búsqueda (depth_limited_search) gestiona la frontera de explor
 
 Para cumplir con el requisito de expandir los nodos en orden lexicográfico, la implementación primero obtiene y ordena la lista de sucesores (sorted(...)), y luego la invierte (reversed(...)) antes de añadirlos a la pila uno por uno. Esto garantiza que el primer nodo en ser extraído de la pila (pop()) sea el que corresponde al primer sucesor en orden lexicográfico. Además, se lleva un contador global (self.expanded_nodes) para asignar los atributos expanded_order y location a cada nodo hijo en el momento de su generación.
 
-* **Tree A\* (Ej. 2.2):** Implementados en `algorithms/astar.py`.
+**Tree A\* (Ej. 2.2):** Implementados en `algorithms/astar.py`.
 
 Para la implementación de A*, se ha enfocado sobre todo en fringe, ya que es el componente central. Se ha utilizado una cola de prioridad, implementada mediante el módulo heapq de Python.
 
@@ -108,7 +108,7 @@ El framework hlogedu-search intenta cargar archivo (ej. algorithms/astar.py) com
 
 Por lo tanto, cuando el script llega a las líneas: from search_algorithm import SearchAlgorithm from node import Node Python no encuentra esos archivos (porque están en algorithms/, no en la raíz del proyecto) y lanza un ModuleNotFoundError.
 
-2. Solución:
+### Solución:
 
 El bloque de código soluciona esto manualmente:
 
@@ -136,23 +136,24 @@ Calcula la distancia Manhattan desde Pacman a la comida.
 h(n) = |pac_r - food_r| + |pac_c - food_c|
 
 Es admisible porque Pacman se mueve en 4 direcciones (coste 1)
-    y no puede moverse en diagonal. Esta es la distancia real más corta
-    en una cuadrícula sin paredes. Como las paredes solo pueden
-    hacer el camino más largo, esta heurística NUNCA sobreestima el
-    coste real.
+y no puede moverse en diagonal. Esta es la distancia real más corta
+en una cuadrícula sin paredes. Como las paredes solo pueden
+hacer el camino más largo, esta heurística NUNCA sobreestima el
+coste real.
 
 * **Euclidean Distance:** 
 
 Calcula la distancia Euclidiana (línea recta) a la comida.
 
-h(n) = sqrt((pac_r - food_r)^2 + (pac_c - food_c)^2)
-
-Calcula la distancia Euclidiana (línea recta) a la comida.
     h(n) = sqrt((pac_r - food_r)^2 + (pac_c - food_c)^2)
 
-    Es admisible porque la distancia en línea recta es, por definición,
-    la distancia más corta posible entre dos puntos. Cualquier
-    camino real en la cuadrícula (con o sin paredes) será
-    igual o más largo que esta distancia. Nunca sobreestima.
+Calcula la distancia Euclidiana (línea recta) a la comida.
+
+    h(n) = sqrt((pac_r - food_r)^2 + (pac_c - food_c)^2)
+
+Es admisible porque la distancia en línea recta es, por definición,
+la distancia más corta posible entre dos puntos. Cualquier
+camino real en la cuadrícula (con o sin paredes) será
+igual o más largo que esta distancia. Nunca sobreestima.
 
 
