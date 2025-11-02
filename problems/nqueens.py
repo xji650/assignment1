@@ -198,35 +198,8 @@ class NQueensIterativeRepair(Problem):
 
 @NQueensIterativeRepair.heuristic
 class RepairHeuristic(Heuristic):
-    """Admissible heuristic for N-Queens iterative repair.
-
+    """
     Heuristic: Minimal number of moves to achieve unique rows.
-
-    Explanation:
-      - A necessary (but not sufficient) condition for a valid solution is
-        that all N queens must be in different rows.
-      - We compute the minimum number of moves required to transform the
-        current row configuration into one where all rows are distinct.
-      - Since each move changes one queen's row, we need to find the optimal
-        assignment of current rows to target rows {0, 1, ..., n-1}.
-      
-    Implementation:
-      - Sort the current rows: sorted_rows
-      - The optimal target assignment is also sorted: [0, 1, 2, ..., n-1]
-      - For each queen in sorted_rows[i], if it's not already at row i,
-        it needs to move (1 move).
-      - Count how many queens need to move: sum(1 for i in range(n) if sorted_rows[i] != i)
-      
-    Admissibility:
-      - Having all queens in unique rows is a NECESSARY condition for the goal.
-      - We compute the MINIMUM number of moves to achieve this condition.
-      - Diagonal conflicts may still exist after achieving unique rows,
-        requiring additional moves.
-      - Therefore: h(state) ≤ actual remaining cost to goal
-      - The heuristic is admissible (never overestimates).
-      
-    Note: This heuristic is more informed than simply counting conflicts,
-    as it considers the structural requirement of unique rows.
     """
 
     def compute(self, state):

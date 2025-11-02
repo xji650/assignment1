@@ -37,7 +37,7 @@ Se ejecutaron los algoritmos base del framework (`hlog-*`) sobre el problema imp
 
 No aparece informacion del árbol, ya que tardaba mucho. Con el árbol, expandiría mucho más nodos y fringe que con el grafo.
 
-#### Justificación de los Resultados
+#### Resultados
 
 Analizando la gráfica, tanto BFS como UCS encontraron la solución de coste óptimo (41), ya que el coste de las acciones es uniforme (o UCS lo garantiza). BFS expandió 325 nodos, mientras que UCS expandió 327, una diferencia mínima. Por otro lado, DFS encontró rápidamente una solución (solo 151 nodos expandidos), pero con mucho coste (459), y eso demuesta que no es completa ni óptima en grafos con ciclos.
 
@@ -50,10 +50,15 @@ Se implementó el problema de N-Queens en `problems/nqueens.py`. El objetivo es 
 #### Heurística Admisible (Ej. 1.2.2)
 
 **Descripción de la Heurística:**
-[...Aquí describes tu heurística. Por ejemplo: "La heurística implementada, `RepairHeuristic`, cuenta el número total de pares de reinas que se están atacando mutuamente en el estado actual..."]
+
+La heurística implementada, `RepairHeuristic`, consiste en calcular el número mínimo de reinas que necesitas mover para resolver todos los conflictos de fila. No tiene en cuenta las diagonales, solo las filas.
+
+El objetivo final (sin reinas atacándose) requiere que todas las reinas estén en filas únicas. Esta heurística calcula el coste mínimo para resolver solo esa parte del problema.
 
 **Justificación de Admisibilidad:**
-[...Aquí justificas por qué es admisible (nunca sobreestima el coste real). Por ejemplo: "Esta heurística es admisible porque para resolver cada conflicto (un par de reinas atacándose), se requiere al menos un movimiento con coste 1. Al contar los pares, `h(n)` nunca será mayor que el coste real para llegar a una solución..."]
+Esta heurística es admisible porque para resolver cada conflicto (un par de reinas atacándose), se requiere al menos un movimiento con coste 1. Al contar los pares, `h(n)` nunca será mayor que el coste real para llegar a una solución.
+
+Dado que la heurística ignora por completo los movimientos extra necesarios para solucionar las diagonales, nunca puede sobreestimar el coste total real. Por lo tanto, $h(state) \le h^*(state)$, lo que la hace admisible.
 
 #### Resultados (UCS vs. A*)
 
@@ -68,7 +73,9 @@ A continuación, se presentan los resultados de una ejecución de ejemplo para `
 | **`tree-astar`** | 1222 | 3 | 4 | 111 |
 
 **Justificación de los Resultados:**
-Incluso en un problema tan pequeño (N=4), las diferencias son evidentes. `hlog-tree-ucs` (búsqueda en árbol) explota en tamaño de frontera (13652) y nodos expandidos (1241) al no detectar estados repetidos. `hlog-tree-astar` mejora esto drásticamente (111 nodos) gracias a la heurística. Finalmente, `hlog-graph-astar` es el más eficiente por un amplio margen (solo 30 nodos), ya que combina la heurística de A* con la detección de estados repetidos (grafos), evitando re-expandir los mismos estados una y otra vez.
+En `hlog-tree-ucs` (búsqueda en árbol) explota en tamaño de frontera (13652) y nodos expandidos (1241) al no detectar estados repetidos. `hlog-tree-astar` mejora esto drásticamente (111 nodos) gracias a la heurística. Finalmente, `hlog-graph-astar` es el más eficiente por un amplio margen (solo 30 nodos), ya que combina la heurística de A* con la detección de estados repetidos (grafos), evitando re-expandir los mismos estados una y otra vez.
+
+Resumiendo un poco, su puede ver que sea con heurística o sin, usando grafo siempre es más eficiente, ja que evita estados repetidos.
 
 ---
 
@@ -77,9 +84,42 @@ Incluso en un problema tan pequeño (N=4), las diferencias son evidentes. `hlog-
 Se implementaron los siguientes algoritmos en la carpeta `algorithms/`, siguiendo los requisitos de la práctica (sucesores en orden lexicográfico, seguimiento de nodos expandidos, etc.).
 
 * **Tree IDS (Ej. 2.1):** Implementado en `algorithms/ids.py`.
-* **Tree A\* y Graph A\* (Ej. 2.2):** Implementados en `algorithms/astar.py`.
 
-[...Aquí puedes añadir una breve descripción de tu implementación, por ejemplo, cómo manejaste la frontera en A* (heapq) o el conjunto de explorados en la versión de grafo...]
+Para la implementación de TreeIDS (Iterative Deepening Search), el algoritmo se basa en un bucle principal (search) que llama repetidamente a una función de Búsqueda en Profundidad Limitada (DLS), llamada depth_limited_search. Este bucle incrementa el límite de profundidad (limit) en cada iteración, comenzando desde 0, hasta que la búsqueda de DLS devuelve una solución.
+
+El núcleo de la búsqueda (depth_limited_search) gestiona la frontera de exploración (fringe) como una pila LIFO (Last-In, First-Out), utilizando una lista estándar de Python y sus métodos append() (para añadir) y pop() (para extraer). Esto implementa la estrategia de Búsqueda en Profundidad (DFS).
+
+Para cumplir con el requisito de expandir los nodos en orden lexicográfico, la implementación primero obtiene y ordena la lista de sucesores (sorted(...)), y luego la invierte (reversed(...)) antes de añadirlos a la pila uno por uno. Esto garantiza que el primer nodo en ser extraído de la pila (pop()) sea el que corresponde al primer sucesor en orden lexicográfico. Además, se lleva un contador global (self.expanded_nodes) para asignar los atributos expanded_order y location a cada nodo hijo en el momento de su generación.
+
+* **Tree A\* (Ej. 2.2):** Implementados en `algorithms/astar.py`.
+
+Para la implementación de A*, se ha enfocado sobre todo en fringe, ya que es el componente central. Se ha utilizado una cola de prioridad, implementada mediante el módulo heapq de Python.
+
+Esta cola de prioridad no almacena directamente los nodos, sino tuplas que permiten al heapq ordenarlos correctamente. 
+
+Se ha centrado en el valor de la función de evaluación $f(n)$, que se calcula sumando el coste del camino real desde el inicio ($g(n)$, node.path_cost) y el valor de la heurística ($h(n)$, self.heuristic(node.state)).
+
+Además, para garantizar un desempate estable (FIFO) y evitar errores de Python al comparar dos objetos Node con el mismo valor $f(n)$, la tupla incluye un contador de generación (_generated_count). Así, la tupla que se inserta en la frontera tiene la forma: (f_cost, generation_count, node).
+
+
+### Problemas
+
+El framework hlogedu-search intenta cargar archivo (ej. algorithms/astar.py) como un script. Cuando Python ejecuta ese script, su "ruta de búsqueda" de módulos (sys.path) no incluye la carpeta algorithms/ donde reside el propio script.
+
+Por lo tanto, cuando el script llega a las líneas: from search_algorithm import SearchAlgorithm from node import Node Python no encuentra esos archivos (porque están en algorithms/, no en la raíz del proyecto) y lanza un ModuleNotFoundError.
+
+2. Solución:
+
+El bloque de código soluciona esto manualmente:
+
+- current_dir = os.path.dirname(os.path.abspath(__file__)): Obtiene la ruta absoluta a la carpeta que contiene este archivo (o sea, .../assignment1/algorithms).
+
+- if current_dir not in sys.path: Comprueba si esa ruta (la carpeta algorithms/) ya está en la lista de lugares donde Python busca módulos.
+
+- sys.path.append(current_dir): Si no lo está, la añade a la lista.
+
+Resultado: Después de ejecutar este bloque, ya no me salta error, pero sigo sin podere ejecutar mi codigo con el framework.
+
 
 ---
 
@@ -89,32 +129,30 @@ Se implementaron los siguientes algoritmos en la carpeta `algorithms/`, siguiend
 
 Se implementaron las heurísticas de Manhattan y Euclidean dentro del fichero `problems/pacman.py`.
 
-* **Manhattan Distance:** [Breve descripción de la implementación...]
-* **Euclidean Distance:** [Breve descripción de la implementación...]
+* **Manhattan Distance:** 
 
-### 4.2. Comparativa de Algoritmos
+Calcula la distancia Manhattan desde Pacman a la comida. 
 
-[...Inserta aquí la tabla/gráfica comparativa de todos los algoritmos (framework y, si pudiste, los tuyos) sobre todos los layouts de Pacman. Analiza los resultados. Ejemplo: "En layouts pequeños como 'smallMaze', todos los algoritmos óptimos (BFS, UCS, A*, Graph A*) encuentran la misma solución... En layouts grandes como 'bigMaze' o los de Warcraft 3, se evidencia que A* con la heurística Manhattan es el más eficiente..."]
+h(n) = |pac_r - food_r| + |pac_c - food_c|
 
----
+Es admisible porque Pacman se mueve en 4 direcciones (coste 1)
+    y no puede moverse en diagonal. Esta es la distancia real más corta
+    en una cuadrícula sin paredes. Como las paredes solo pueden
+    hacer el camino más largo, esta heurística NUNCA sobreestima el
+    coste real.
 
-## 5. Nota Importante sobre Problemas Técnicos
+* **Euclidean Distance:** 
 
-**Esta es la sección que me pediste explícitamente:**
+Calcula la distancia Euclidiana (línea recta) a la comida.
 
-Durante el desarrollo de la práctica, se implementaron los algoritmos solicitados en el **Ejercicio 2** (Tree IDS, Tree A\* y Graph A\*) en sus respectivos archivos (`ids.py`, `astar.py`). Sin embargo, surgieron problemas técnicos persistentes con el framework `hlogedu-search` que impidieron su ejecución y verificación.
+h(n) = sqrt((pac_r - food_r)^2 + (pac_c - food_c)^2)
 
-A pesar de seguir la estructura de ficheros (`algorithms/__init__.py`, etc.) y probar múltiples configuraciones del entorno de Python (incluyendo la gestión del `PYTHONPATH` y la corrección de importaciones), el framework **no reconoció los algoritmos implementados** (mostrando errores de tipo "Algorithm not found" o `ImportError`).
+Calcula la distancia Euclidiana (línea recta) a la comida.
+    h(n) = sqrt((pac_r - food_r)^2 + (pac_c - food_c)^2)
 
-Debido a esto:
+    Es admisible porque la distancia en línea recta es, por definición,
+    la distancia más corta posible entre dos puntos. Cualquier
+    camino real en la cuadrícula (con o sin paredes) será
+    igual o más largo que esta distancia. Nunca sobreestima.
 
-1.  **No se pudo realizar la comparativa** de nuestros algoritmos implementados contra los del framework, como se solicitaba para validar la implementación (Ej. 2).
-2.  **No se pudieron ejecutar nuestros algoritmos** en el problema de Pacman (Ej. 3.3).
 
-Por lo tanto, los resultados del Ejercicio 3 se centran en los algoritmos proporcionados por el framework. El código de los Ejercicios 2.1 y 2.2 se entrega igualmente para su revisión manual, aunque no haya sido posible verificar su salida empíricamente.
-
----
-
-## 6. Conclusión
-
-[...Aquí haces un resumen de lo que aprendiste. Por ejemplo: "Esta práctica ha permitido comprender en profundidad el modelado de problemas de IA y la diferencia crítica en el rendimiento (coste y nodos expandidos) entre algoritmos de búsqueda informados (A*) y no informados (BFS, UCS)..."]

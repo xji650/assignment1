@@ -44,28 +44,21 @@ class TreeAStar(SearchAlgorithm):
         root = Node(state=start_state)
         root.location = "root"
         
-        fringe = []
+        fringe = [] # cola de prioridad (heapq)
         f_root = self.f(root)
 
-        # Añadir contador de desempate a la tupla
+        # Añadir contador de desempate a raray
         heapq.heappush(fringe, (f_root, self._generated_count, root))
         self._generated_count += 1
 
         while fringe:
-            # Sacar 3 elementos de la tupla
             _, _, node = heapq.heappop(fringe)
 
-            # PRUEBA DE OBJETIVO
             if self.problem.is_goal_state(node.state):
                 return node
 
-            # --- EXPANSIÓN DEL NODO ---
-            # Lógica de expansión
-            # 1. Guardar el orden de expansión actual
             current_expansion_order = self.expanded_nodes
-            # 2. Asignarlo al nodo que *está siendo* expandido
             node.expanded_order = current_expansion_order
-            # 3. Incrementar el contador global
             self.expanded_nodes += 1
             
             # Generar sucesores en orden lexicográfico
@@ -80,7 +73,6 @@ class TreeAStar(SearchAlgorithm):
                 )
 
                 # Asignar atributos al *hijo*
-                # El hijo obtiene el 'expanded_order' de su padre
                 child.expanded_order = current_expansion_order
                 child.location = f"depth_{child.depth}_node_{current_expansion_order}"
 
