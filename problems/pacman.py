@@ -209,3 +209,62 @@ class PacmanProblem(Problem):
         if 0 <= r <= self.rows and 0 <= c <= self.cols and self.grid[r][c] != "%":
             return ((r, c), new_food)
         return None
+# Heuristics
+##############################################################################
+from hlogedu.search.problem import Heuristic
+import math
+
+@PacmanProblem.heuristic
+class ManhattanHeuristic(Heuristic):
+    """
+    Calcula la distancia Manhattan desde Pacman a la comida.
+    h(n) = |pac_r - food_r| + |pac_c - food_c|
+
+    Es admisible porque Pacman se mueve en 4 direcciones (coste 1)
+    y no puede moverse en diagonal. Esta es la distancia real más corta
+    en una cuadrícula sin paredes. Como las paredes solo pueden
+    hacer el camino más largo, esta heurística NUNCA sobreestima el
+    coste real.
+    """
+    NAME = "Manhattan"
+
+    def compute(self, state):
+        # El estado es: ((pac_r, pac_c), food_pos)
+        (pac_r, pac_c), food_pos = state
+
+        if food_pos is None:
+            # Si la comida es None, ya hemos llegado al objetivo.
+            # El coste restante es 0.
+            return 0
+        
+        (food_r, food_c) = food_pos
+        
+        distance = abs(pac_r - food_r) + abs(pac_c - food_c)
+        return distance
+
+@PacmanProblem.heuristic
+class EuclideanHeuristic(Heuristic):
+    """
+    Calcula la distancia Euclidiana (línea recta) a la comida.
+    h(n) = sqrt((pac_r - food_r)^2 + (pac_c - food_c)^2)
+
+    Es admisible porque la distancia en línea recta es, por definición,
+    la distancia más corta posible entre dos puntos. Cualquier
+    camino real en la cuadrícula (con o sin paredes) será
+    igual o más largo que esta distancia. Nunca sobreestima.
+    """
+    NAME = "Euclidean"
+
+    def compute(self, state):
+        # El estado es: ((pac_r, pac_c), food_pos)
+        (pac_r, pac_c), food_pos = state
+
+        if food_pos is None:
+            # Si la comida es None, ya hemos llegado al objetivo.
+            # El coste restante es 0.
+            return 0
+        
+        (food_r, food_c) = food_pos
+        
+        distance = math.sqrt((pac_r - food_r)**2 + (pac_c - food_c)**2)
+        return distance

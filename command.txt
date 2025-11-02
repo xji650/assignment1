@@ -1,0 +1,27 @@
+
+# Graph versions
+hlogedu-search run -a hlog-graph-bfs -p kiwis-and-dogs | dot -K dot -T svg -o bfsG-kiwis-and-dogs.svg
+hlogedu-search run -a hlog-graph-dfs -p kiwis-and-dogs | dot -K dot -T svg -o dfsG-kiwis-and-dogs.svg
+hlogedu-search run -a hlog-graph-ucs -p kiwis-and-dogs | dot -K dot -T svg -o ucsG-kiwis-and-dogs.svg
+
+
+
+-----
+
+# Graph versions
+hlogedu-search run -a hlog-graph-ucs -p NQueensIR -pp n_queens=4 -pp seed=123
+hlogedu-search run -a hlog-graph-ucs -p NQueensIR -pp n_queens=4 -pp seed=123 -o pygame
+hlogedu-search run -a hlog-graph-ucs -p NQueensIR -pp n_queens=4 -pp seed=123 | dot -K dot -T svg -o ucsG-NQueensIR.svg
+
+hlogedu-search run -a hlog-graph-astar -p NQueensIR -hf RepairHeuristic -pp n_queens=4 -pp seed=123
+hlogedu-search run -a hlog-graph-astar -p NQueensIR -hf RepairHeuristic -pp n_queens=4 -pp seed=123 -o pygame
+hlogedu-search run -a hlog-graph-astar -p NQueensIR -hf RepairHeuristic -pp n_queens=4 -pp seed=123 | dot -K dot -T svg -o astarG-NQueensIR.svg
+
+# Tree versions
+hlogedu-search run -a hlog-tree-ucs -p NQueensIR -pp n_queens=4 -pp seed=123
+hlogedu-search run -a hlog-tree-ucs -p NQueensIR -pp n_queens=4 -pp seed=123 -o pygame
+hlogedu-search run -a hlog-tree-ucs -p NQueensIR -pp n_queens=4 -pp seed=123 | dot -K dot -T svg -o ucsT-NQueensIR.svg
+
+hlogedu-search run -a hlog-tree-astar -p NQueensIR -hf RepairHeuristic -pp n_queens=4 -pp seed=123
+hlogedu-search run -a hlog-tree-astar -p NQueensIR -hf RepairHeuristic -pp n_queens=4 -pp seed=123 -o pygame
+hlogedu-search run -a hlog-tree-astar -p NQueensIR -hf RepairHeuristic -pp n_queens=4 -pp seed=123 | dot -K dot -T svg -o astarT-NQueensIR.svg

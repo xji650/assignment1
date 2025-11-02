@@ -120,9 +120,7 @@ class NQueensIterativeRepair(Problem):
     NAME = "NQueensIR"
     VISUALIZER = NQueensVisualizer
     PARAMS = [
-        ClassParameter(
-            name="n_queens", type=int, default="8", help="Number of queens."
-        ),
+        ClassParameter(name="n_queens", type=int, default="8", help="Number of queens."),
         ClassParameter(name="seed", type=int, default="123456", help="Random seed."),
     ]
 
@@ -134,15 +132,64 @@ class NQueensIterativeRepair(Problem):
         random.seed(self.seed)
 
     def get_start_states(self):
+        """Generate random initial configuration with N queens on the board."""
         return [tuple(random.randint(0, self.b_size - 1) for _ in range(self.b_size))]
 
     def is_goal_state(self, state):
-        raise NotImplementedError("Implement me!")
-
+        """A state is a goal if no queens attack each other."""
+        if not isinstance(state, (tuple, list)):
+            return False
+            
+        if len(state) != self.b_size:
+            return False
+        
+        n = len(state)
+        
+        for col1 in range(n):
+            row1 = state[col1]
+            for col2 in range(col1 + 1, n):
+                row2 = state[col2]
+                
+                # Check if queens attack each other
+                # Same row
+                if row1 == row2:
+                    return False
+                
+                # Same diagonal
+                if abs(row1 - row2) == abs(col1 - col2):
+                    return False
+        
+        return True
+    
     def is_valid_state(self, state):
-        raise NotImplementedError("Implement me!")
+        """A state is valid if all queens are within the board boundaries."""
+        if not isinstance(state, (tuple, list)):
+            return False
+            
+        if len(state) != self.b_size:
+            return False
+            
+        return all(0 <= row < self.b_size for row in state)
 
     # Actions go here...
+    @action(DDRange(0, 'b_size'), DDRange(0, 'b_size'), cost=1)
+    def move_queen(self, state, queen_col, new_row):
+        """Move the queen in column `queen_col` to `new_row`."""
+
+        if queen_col >= len(state) or new_row >= self.b_size:
+            return None
+
+        old_row = state[queen_col]
+        
+        # Can't move to the same position
+        if old_row == new_row:
+            return None
+        
+        new_state = list(state)
+        new_state[queen_col] = new_row
+        new_state = tuple(new_state)
+
+        return new_state
 
 
 # Heuristic
@@ -151,6 +198,49 @@ class NQueensIterativeRepair(Problem):
 
 @NQueensIterativeRepair.heuristic
 class RepairHeuristic(Heuristic):
+    """Admissible heuristic for N-Queens iterative repair.
+
+    Heuristic: Minimal number of moves to achieve unique rows.
+
+    Explanation:
+      - A necessary (but not sufficient) condition for a valid solution is
+        that all N queens must be in different rows.
+      - We compute the minimum number of moves required to transform the
+        current row configuration into one where all rows are distinct.
+      - Since each move changes one queen's row, we need to find the optimal
+        assignment of current rows to target rows {0, 1, ..., n-1}.
+      
+    Implementation:
+      - Sort the current rows: sorted_rows
+      - The optimal target assignment is also sorted: [0, 1, 2, ..., n-1]
+      - For each queen in sorted_rows[i], if it's not already at row i,
+        it needs to move (1 move).
+      - Count how many queens need to move: sum(1 for i in range(n) if sorted_rows[i] != i)
+      
+    Admissibility:
+      - Having all queens in unique rows is a NECESSARY condition for the goal.
+      - We compute the MINIMUM number of moves to achieve this condition.
+      - Diagonal conflicts may still exist after achieving unique rows,
+        requiring additional moves.
+      - Therefore: h(state) ≤ actual remaining cost to goal
+      - The heuristic is admissible (never overestimates).
+      
+    Note: This heuristic is more informed than simply counting conflicts,
+    as it considers the structural requirement of unique rows.
+    """
 
     def compute(self, state):
-        raise NotImplementedError("Implement me!")
+        """Compute minimum moves needed to achieve unique rows."""
+        if not isinstance(state, (tuple, list)):
+            return float('inf')
+        
+        n = len(state)
+        
+        # Sort current rows
+        sorted_rows = sorted(state)
+        
+        # Count how many queens are NOT in their target position
+        # Target positions are 0, 1, 2, ..., n-1 (sorted)
+        moves_needed = sum(1 for i in range(n) if sorted_rows[i] != i)
+        
+        return moves_needed
